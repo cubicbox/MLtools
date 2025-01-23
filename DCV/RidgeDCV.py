@@ -1,10 +1,10 @@
 #%%
+import optuna
 from sklearn.datasets import fetch_california_housing
 from sklearn.linear_model import Ridge
-from sklearn.model_selection import cross_validate
-from sklearn.model_selection import KFold
 from sklearn.metrics import r2_score
-import optuna
+from sklearn.model_selection import cross_validate, KFold
+from sklearn.preprocessing import StandardScaler
 
 def objective(trial):
     # parameters for Ridge regression
@@ -28,9 +28,15 @@ y_pred = []
 for i, (train_index, test_index) in enumerate(kf.split(X)):
     # Split data
     X_train = X[train_index]
-    y_train = y[train_index]
+    y_train = y[train_index].reshape(-1, 1)
     X_test = X[test_index]
-    y_test = y[test_index]
+    y_test = y[test_index].reshape(-1, 1)
+    # Scaling
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+    y_train = scaler.fit_transform(y_train)
+    y_test = scaler.transform(y_test)
     # Optimize hyperparameters
     study = optuna.create_study(direction='maximize')
     study.optimize(objective, n_trials=100)
